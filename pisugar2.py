@@ -49,13 +49,13 @@ class PiSugar(plugins.Plugin):
 
     def on_ui_update(self, ui):
         capacity = int(self.ps.get_battery_percentage().value)
-        if self.ps.get_charging_status().value and not self.charge_indicator:
-            self.charge_indicator = True
-            ui.set("bat", "CHG")
+        # if self.ps.get_charging_status().value and not self.charge_indicator:
+        #     self.charge_indicator = True
+        #     ui.set("bat", "CHG")
 
-        else:
-            self.charge_indicator = False
-            ui.set("bat", str(capacity) + "%")
+        # else:
+        # self.charge_indicator = False
+        ui.set("bat", str(capacity) + "%")
 
         if capacity <= self.options["shutdown"]:
             logging.info(
