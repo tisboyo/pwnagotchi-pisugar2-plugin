@@ -12,7 +12,6 @@ import pwnagotchi.plugins as plugins
 import pwnagotchi
 import time
 
-
 class PiSugar(plugins.Plugin):
     __author__ = "10230718+tisboyo@users.noreply.github.com"
     __version__ = "0.0.1"
@@ -21,6 +20,7 @@ class PiSugar(plugins.Plugin):
 
     def __init__(self):
         self.ps = None
+        self.is_charging = False
         self.is_new_model = False
 
     def on_loaded(self):
@@ -35,18 +35,22 @@ class PiSugar(plugins.Plugin):
         else:
             self.is_new_model = False
 
+        if self.options["sync_rtc_on_boot"]:
+            self.ps.set_pi_from_rtc()
+
     def on_ui_setup(self, ui):
         ui.add_element(
             "bat",
             LabeledValue(
                 color=BLACK,
                 label="BAT",
-                value="0%/0V",
+                value="0%",
                 position=(ui.width() / 2 + 15, 0),
                 label_font=fonts.Bold,
                 text_font=fonts.Medium,
             ),
         )
+        # display charging status
         if self.is_new_model:
             ui.add_element(
                 "chg",
@@ -54,7 +58,7 @@ class PiSugar(plugins.Plugin):
                     color=BLACK,
                     label="",
                     value="",
-                    position=(ui.width() / 2 - 5, 0),
+                    position=(ui.width() / 2 - 12, 0),
                     label_font=fonts.Bold,
                     text_font=fonts.Bold,
                 ),
@@ -72,8 +76,12 @@ class PiSugar(plugins.Plugin):
         if self.is_new_model:
             if self.ps.get_battery_power_plugged().value and self.ps.get_battery_allow_charging().value:
                 ui.set("chg", "CHG")
+                if not self.is_charging:
+                    ui.update(force=True, new_data={"status": "Power!! I can feel it!"})
+                self.is_charging = True
             else:
                 ui.set("chg", "")
+                self.is_charging = False
 
         ui.set("bat", str(capacity) + "%")
 
