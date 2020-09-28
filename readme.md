@@ -12,8 +12,8 @@ cd ~
 curl http://cdn.pisugar.com/release/Pisugar-power-manager.sh | sudo bash
 
 # Download the plugin and support library
-git clone https://github.com/tisboyo/pisugar2py.git
-git clone https://github.com/tisboyo/pwnagotchi-pisugar2-plugin.git
+git clone https://github.com/PiSugar/pisugar2py.git
+git clone https://github.com/PiSugar/pwnagotchi-pisugar2-plugin.git
 
 #Make the installed-plugins directory if it doesn't already exist
 sudo mkdir -p /usr/local/share/pwnagotchi/installed-plugins/
@@ -33,6 +33,7 @@ In /etc/pwnagotchi/config.toml add:
 main.custom_plugins = "/usr/local/share/pwnagotchi/installed-plugins/"
 main.plugins.pisugar2.enabled = true
 main.plugins.pisugar2.shutdown = 5
+main.plugins.pisugar2.sync_rtc_on_boot = true
 ```
 
 
