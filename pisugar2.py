@@ -12,7 +12,6 @@ import pwnagotchi.plugins as plugins
 import pwnagotchi
 import time
 
-
 class PiSugar(plugins.Plugin):
     __author__ = "10230718+tisboyo@users.noreply.github.com"
     __version__ = "0.0.1"
@@ -21,7 +20,8 @@ class PiSugar(plugins.Plugin):
 
     def __init__(self):
         self.ps = None
-        self.charge_indicator = False
+        self.is_charging = False
+        self.is_new_model = False
 
     def on_loaded(self):
         # Load here so it doesn't attempt to load if the plugin is not enabled
@@ -30,32 +30,59 @@ class PiSugar(plugins.Plugin):
         self.ps = PiSugar2()
         logging.info("[pisugar2] plugin loaded.")
 
+        if self.ps.get_battery_led_amount().value == 2:
+            self.is_new_model = True
+        else:
+            self.is_new_model = False
+
+        if self.options["sync_rtc_on_boot"]:
+            self.ps.set_pi_from_rtc()
+
     def on_ui_setup(self, ui):
         ui.add_element(
             "bat",
             LabeledValue(
                 color=BLACK,
                 label="BAT",
-                value="0%/0V",
+                value="0%",
                 position=(ui.width() / 2 + 15, 0),
                 label_font=fonts.Bold,
                 text_font=fonts.Medium,
             ),
         )
+        # display charging status
+        if self.is_new_model:
+            ui.add_element(
+                "chg",
+                LabeledValue(
+                    color=BLACK,
+                    label="",
+                    value="",
+                    position=(ui.width() / 2 - 12, 0),
+                    label_font=fonts.Bold,
+                    text_font=fonts.Bold,
+                ),
+            )
 
     def on_unload(self, ui):
         with ui._lock:
             ui.remove_element("bat")
+            ui.remove_element("chg")
 
     def on_ui_update(self, ui):
         capacity = int(self.ps.get_battery_percentage().value)
-        # Something is causing the program to respond with incorrect values, so disabling for now.
-        # if self.ps.get_charging_status().value and not self.charge_indicator:
-        #     self.charge_indicator = True
-        #     ui.set("bat", "CHG")
 
-        # else:
-        # self.charge_indicator = False
+        # new model use battery_power_plugged & battery_allow_charging to detect real charging status
+        if self.is_new_model:
+            if self.ps.get_battery_power_plugged().value and self.ps.get_battery_allow_charging().value:
+                ui.set("chg", "CHG")
+                if not self.is_charging:
+                    ui.update(force=True, new_data={"status": "Power!! I can feel it!"})
+                self.is_charging = True
+            else:
+                ui.set("chg", "")
+                self.is_charging = False
+
         ui.set("bat", str(capacity) + "%")
 
         if capacity <= self.options["shutdown"]:
